@@ -1,0 +1,1 @@
+In this dataset I'll discover distinct customer segments in the Online Retail II dataset and determine the most appropriate number of clusters using unsupervised learning.
