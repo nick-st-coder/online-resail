@@ -1,1 +1,1 @@
-In this dataset I'll discover distinct customer segments in the Online Retail II dataset and determine the most appropriate number of clusters using unsupervised learning.
+This project investigates whether distinct customer segments can be identified from transactional purchasing behavior and determines an appropriate number of clusters using multiple unsupervised learning techniques and cluster validity metrics."
