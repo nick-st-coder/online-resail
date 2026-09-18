@@ -1,4 +1,4 @@
-﻿"""End-to-end customer segmentation pipeline.
+"""End-to-end customer segmentation pipeline.
 
 Loads the processed transactions, builds customer-level features, runs the
 K-Means k-selection sweep, a seed-stability check, and a GMM BIC/AIC
@@ -48,8 +48,15 @@ CUSTOMER_COLS = [
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run customer segmentation pipeline.")
-    parser.add_argument("--k", type=int, default=3, help="Number of clusters for the final model.")
-    parser.add_argument("--data", type=str, default="data/processed/online_retail.csv", help="Path to processed transactions.")
+    parser.add_argument(
+        "--k", type=int, default=3, help="Number of clusters for the final model."
+    )
+    parser.add_argument(
+        "--data",
+        type=str,
+        default="data/processed/online_retail.csv",
+        help="Path to processed transactions.",
+    )
     args = parser.parse_args()
 
     logger.info("Loading %s", args.data)

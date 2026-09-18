@@ -1,4 +1,4 @@
-﻿"""Customer-level feature engineering for the Online Retail II dataset.
+"""Customer-level feature engineering for the Online Retail II dataset.
 
 Turns the row-level transaction data into one row per customer with
 RFM-style features, then applies the transforms the clustering pipeline
@@ -49,14 +49,12 @@ def build_customer_features(df: pd.DataFrame) -> pd.DataFrame:
     agg_map = {col: "first" for col in CUSTOMER_COLS}
     agg_map.update(_AGG_OVERRIDES)
 
-    return (
-        df.groupby("Customer ID")[CUSTOMER_COLS]
-        .agg(agg_map)
-        .reset_index()
-    )
+    return df.groupby("Customer ID")[CUSTOMER_COLS].agg(agg_map).reset_index()
 
 
-def log1p_transform(cust: pd.DataFrame, feature_cols: list[str] | None = None) -> pd.DataFrame:
+def log1p_transform(
+    cust: pd.DataFrame, feature_cols: list[str] | None = None
+) -> pd.DataFrame:
     """Apply ``log1p`` to the feature columns to tame right skew.
 
     Args:
@@ -75,7 +73,9 @@ def log1p_transform(cust: pd.DataFrame, feature_cols: list[str] | None = None) -
     return out
 
 
-def scale_features(cust_log: pd.DataFrame, feature_cols: list[str] | None = None) -> tuple[np.ndarray, StandardScaler]:
+def scale_features(
+    cust_log: pd.DataFrame, feature_cols: list[str] | None = None
+) -> tuple[np.ndarray, StandardScaler]:
     """Standardize the log-transformed features.
 
     Args:

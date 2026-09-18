@@ -1,4 +1,4 @@
-﻿"""Clustering models and evaluation for customer segmentation.
+"""Clustering models and evaluation for customer segmentation.
 
 Provides K-Means fitting with k-selection (elbow / silhouette /
 Davies-Bouldin), seed-stability checks, and a Gaussian Mixture comparison
@@ -14,7 +14,9 @@ from sklearn.metrics import davies_bouldin_score, silhouette_score
 from sklearn.mixture import GaussianMixture
 
 
-def fit_kmeans(X: np.ndarray, k: int, random_state: int = 78, n_init: int = 10) -> KMeans:
+def fit_kmeans(
+    X: np.ndarray, k: int, random_state: int = 78, n_init: int = 10
+) -> KMeans:
     """Fit K-Means with a fixed seed and return the fitted estimator.
 
     Args:
@@ -103,7 +105,9 @@ def stability_check(
     return pd.DataFrame(rows)
 
 
-def gmm_bic_aic(X: np.ndarray, k_range: range = range(2, 6), random_state: int = 78) -> pd.DataFrame:
+def gmm_bic_aic(
+    X: np.ndarray, k_range: range = range(2, 6), random_state: int = 78
+) -> pd.DataFrame:
     """Fit Gaussian Mixture Models and return BIC/AIC per k.
 
     BIC/AIC are principled model-selection criteria for the number of
@@ -125,7 +129,9 @@ def gmm_bic_aic(X: np.ndarray, k_range: range = range(2, 6), random_state: int =
     return pd.DataFrame(results).set_index("k")
 
 
-def cluster_profile(cust: pd.DataFrame, labels: np.ndarray, feature_cols: list[str]) -> pd.DataFrame:
+def cluster_profile(
+    cust: pd.DataFrame, labels: np.ndarray, feature_cols: list[str]
+) -> pd.DataFrame:
     """Profile each cluster on the original (untransformed) scale.
 
     Args:
@@ -137,8 +143,12 @@ def cluster_profile(cust: pd.DataFrame, labels: np.ndarray, feature_cols: list[s
         DataFrame indexed by cluster with ``n_customers`` and the mean of
         each feature column, rounded to 2 decimals.
     """
-    summary = cust.assign(cluster=labels).groupby("cluster").agg(
-        n_customers=("Customer ID", "count"),
-        **{f"avg_{col}": (col, "mean") for col in feature_cols},
+    summary = (
+        cust.assign(cluster=labels)
+        .groupby("cluster")
+        .agg(
+            n_customers=("Customer ID", "count"),
+            **{f"avg_{col}": (col, "mean") for col in feature_cols},
+        )
     )
     return summary.round(2)

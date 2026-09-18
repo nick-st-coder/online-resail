@@ -1,4 +1,4 @@
-﻿"""Tests for src/features/build_features.py."""
+"""Tests for src/features/build_features.py."""
 
 import numpy as np
 import pandas as pd

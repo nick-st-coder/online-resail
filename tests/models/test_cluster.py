@@ -1,4 +1,4 @@
-﻿"""Tests for src/models/cluster.py."""
+"""Tests for src/models/cluster.py."""
 
 import numpy as np
 import pandas as pd
@@ -35,13 +35,17 @@ def test_k_selection_sweep_shape(blobs: tuple[np.ndarray, np.ndarray]) -> None:
     assert {"inertia", "silhouette", "davies_bouldin"} <= set(sweep.columns)
 
 
-def test_k_selection_sweep_inertia_decreases(blobs: tuple[np.ndarray, np.ndarray]) -> None:
+def test_k_selection_sweep_inertia_decreases(
+    blobs: tuple[np.ndarray, np.ndarray],
+) -> None:
     X, _ = blobs
     sweep = k_selection_sweep(X, k_range=range(2, 5))
     assert sweep["inertia"].is_monotonic_decreasing
 
 
-def test_stability_check_returns_one_row_per_seed(blobs: tuple[np.ndarray, np.ndarray]) -> None:
+def test_stability_check_returns_one_row_per_seed(
+    blobs: tuple[np.ndarray, np.ndarray],
+) -> None:
     X, _ = blobs
     result = stability_check(X, k=3, seeds=[0, 1, 2])
     assert len(result) == 3
@@ -65,7 +69,9 @@ def test_cluster_profile_counts_customers() -> None:
         }
     )
     labels = np.array([0, 0, 1])
-    profile = cluster_profile(cust, labels, feature_cols=["total_revenue", "num_orders"])
+    profile = cluster_profile(
+        cust, labels, feature_cols=["total_revenue", "num_orders"]
+    )
     assert profile.loc[0, "n_customers"] == 2
     assert profile.loc[1, "n_customers"] == 1
     assert profile.loc[0, "avg_total_revenue"] == 150.0
