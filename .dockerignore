@@ -1,49 +1,42 @@
+# Version control
 .git
-
 .gitignore
 
+# Python / uv
 .venv
-
-.python-version
-
 __pycache__
-
+*.pyc
 .pytest_cache
-
+.ruff_cache
 .ipynb_checkpoints
 
-mlruns
+# Environment
+.env
+.env.*
+!.env.example
 
-notebooks
-
-notebook
-
-tests
-
+# Data (large, not needed at runtime)
 data
-
+mlruns
 mlartifacts
-
-docker
-
 artifacts
 
+# Notebooks / docs / tests (not needed in the image)
+notebooks
+tests
 *.ipynb
-
-*.parquet
-
-*.csv
-
-*.pkl
-
-*.joblib
-
 *.md
 
+# Local tooling
+docker
+config
+
+# Large binary artifacts
+*.parquet
+*.csv
+*.pkl
+*.joblib
 *.png
-
 *.jpg
-
 *.jpeg
-
 *.svg
