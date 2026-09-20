@@ -2,16 +2,19 @@
 
 Loads the processed transactions, builds customer-level features, runs the
 K-Means k-selection sweep, a seed-stability check, and a GMM BIC/AIC
-comparison, then prints the chosen model's cluster profile.
+comparison, then prints the chosen model's cluster profile. Optionally
+saves the fitted model (scaler + K-Means) for the serving app.
 
 Usage:
-    uv run python scripts/run_clustering.py [--k 3] [--data data/processed/online_retail.csv]
+    uv run python scripts/run_clustering.py [--k 3] [--data data/processed/online_retail.csv] [--save-model]
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import pickle
+from pathlib import Path
 
 import pandas as pd
 
@@ -27,6 +30,7 @@ from src.models.cluster import (
     k_selection_sweep,
     stability_check,
 )
+from src.models.segmentation_model import SegmentationModel
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -57,6 +61,14 @@ def main() -> None:
         default="data/processed/online_retail.csv",
         help="Path to processed transactions.",
     )
+    parser.add_argument(
+        "--save-model",
+        type=str,
+        nargs="?",
+        const="artifacts/segmentation_model.pkl",
+        default=None,
+        help="Save the fitted model (scaler + K-Means) to this path.",
+    )
     args = parser.parse_args()
 
     logger.info("Loading %s", args.data)
@@ -67,7 +79,7 @@ def main() -> None:
     logger.info("Customers: %d (was %d rows)", len(cust), len(df))
 
     cust_log = log1p_transform(cust)
-    X_scaled, _ = scale_features(cust_log)
+    X_scaled, scaler = scale_features(cust_log)
 
     logger.info("K-Means k-selection sweep (k=2..5)")
     sweep = k_selection_sweep(X_scaled)
@@ -92,6 +104,14 @@ def main() -> None:
     model = fit_kmeans(X_scaled, k=args.k)
     profile = cluster_profile(cust, model.labels_, CUSTOMER_COLS)
     print(profile)
+
+    if args.save_model:
+        path = Path(args.save_model)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        wrapper = SegmentationModel(scaler=scaler, kmeans=model)
+        with path.open("wb") as fh:
+            pickle.dump(wrapper, fh)
+        logger.info("Saved model to %s", path)
 
 
 if __name__ == "__main__":

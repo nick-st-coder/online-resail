@@ -40,7 +40,7 @@ def test_predict_returns_labels_for_dataframe(
 ) -> None:
     """Predict on a DataFrame returns one label per row."""
     row = pd.DataFrame([{f: 10.0 for f in FEATURES}])
-    labels = fitted_wrapper.predict(None, row)
+    labels = fitted_wrapper.predict(row)
     assert labels.shape == (1,)
     assert labels.dtype.kind == "i"
 
@@ -48,7 +48,7 @@ def test_predict_returns_labels_for_dataframe(
 def test_predict_accepts_ndarray(fitted_wrapper: SegmentationModel) -> None:
     """Predict on an ndarray works too."""
     arr = np.full((2, len(FEATURES)), 10.0)
-    labels = fitted_wrapper.predict(None, arr)
+    labels = fitted_wrapper.predict(arr)
     assert labels.shape == (2,)
 
 
@@ -58,5 +58,5 @@ def test_predict_reorders_columns_to_scaler_order(
     """Column order in the input doesn't matter; the scaler's order wins."""
     shuffled = list(reversed(FEATURES))
     row = pd.DataFrame([{f: 10.0 for f in shuffled}], columns=shuffled)
-    labels = fitted_wrapper.predict(None, row)
+    labels = fitted_wrapper.predict(row)
     assert labels.shape == (1,)

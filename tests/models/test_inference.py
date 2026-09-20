@@ -1,6 +1,6 @@
 """Tests for src/app/inference.py.
 
-Mocks the MLflow model — no real server, no network.
+Mocks the model file loading — no real model, no filesystem dependency.
 """
 
 from __future__ import annotations
@@ -30,31 +30,26 @@ def _valid_features() -> dict[str, float]:
     }
 
 
-def test_load_model_raises_without_tracking_uri(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Fails fast at startup when MLFLOW_TRACKING_URI is unset."""
-    monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)
-    with pytest.raises(ModelLoadError, match="MLFLOW_TRACKING_URI"):
+def test_load_model_raises_when_file_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fails fast when the model file does not exist."""
+    monkeypatch.setenv("MODEL_PATH", "does/not/exist.pkl")
+    with pytest.raises(ModelLoadError, match="Model file not found"):
         load_model()
 
 
-def test_load_model_raises_on_load_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_load_model_raises_on_load_failure(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Surfaces load failures as ModelLoadError."""
-    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://tracking:5000")
-    with (
-        mock.patch(
-            "src.app.inference.mlflow.pyfunc.load_model",
-            side_effect=RuntimeError("boom"),
-        ),
-        pytest.raises(ModelLoadError, match="boom"),
-    ):
+    model_file = tmp_path / "model.pkl"
+    model_file.write_bytes(b"not a pickle")
+    monkeypatch.setenv("MODEL_PATH", str(model_file))
+    with pytest.raises(ModelLoadError, match="Failed to load model"):
         load_model()
 
 
 def test_predict_returns_cluster_and_segment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Predict returns the cluster, segment name, and echoed features."""
-    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://tracking:5000")
     fake_model = mock.Mock()
     fake_model.predict.return_value = np.array([2])
     with (
@@ -68,9 +63,8 @@ def test_predict_returns_cluster_and_segment(monkeypatch: pytest.MonkeyPatch) ->
     assert result["features"] == _valid_features()
 
 
-def test_predict_raises_on_missing_feature(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_predict_raises_on_missing_feature() -> None:
     """Missing features raise ValueError listing them."""
-    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://tracking:5000")
     features = _valid_features()
     del features["recency_days"]
     with pytest.raises(ValueError, match="recency_days"):

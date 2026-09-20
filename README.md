@@ -20,9 +20,9 @@ The company has no labels telling it who its customers are — only raw transact
 
 2. **Modeling notebook** (`notebooks/modeling.ipynb`) — cluster selection (elbow / silhouette / Davies-Bouldin), cross-validation with GMM (BIC/AIC) and agglomerative clustering, and the final K-Means model with segment interpretation.
 
-3. **Production code** (`src/`) — feature building, the clustering model, an MLflow-tracked pyfunc wrapper, and a FastAPI + Gradio serving app.
+3. **Production code** (`src/`) — feature building, the clustering model, and a FastAPI + Gradio serving app.
 
-4. **CI** (`.github/workflows/ci.yml`) — lint, tests, and a smoke validation of the registered MLflow model.
+4. **CI** (`.github/workflows/ci.yml`) — lint and tests.
 
 ## Problems I faced during the project
 
@@ -112,7 +112,6 @@ pandas · numpy · matplotlib · seaborn · scikit-learn · scipy · statsmodels
 ```bash
 uv sync --dev
 uv run jupyter notebook notebooks/EDA.ipynb
-uv run python scripts/run_clustering.py
-uv run python scripts/train_and_register.py
+uv run python scripts/run_clustering.py --save-model
 uv run uvicorn src.app.main:app --reload
 ```

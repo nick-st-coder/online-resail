@@ -1,10 +1,10 @@
 """Model inference for the serving app.
 
-Loads the MLflow model once at startup and exposes a single ``predict``
+Loads the segmentation model once at startup and exposes a single ``predict``
 function used by both the FastAPI route and the Gradio UI — there is
-exactly one code path making predictions. The logged model is a
-:class:`~src.models.segmentation_model.SegmentationModel` pyfunc wrapper
-that applies log1p + scaling internally, so raw customer features are sent
+exactly one code path making predictions. The model is a
+:class:`~src.models.segmentation_model.SegmentationModel` wrapper that
+applies log1p + scaling internally, so raw customer features are sent
 directly.
 """
 
@@ -12,15 +12,17 @@ from __future__ import annotations
 
 import logging
 import os
+import pickle
+from pathlib import Path
 
-import mlflow
 import pandas as pd
+
+from src.models.segmentation_model import SegmentationModel
 
 logger = logging.getLogger(__name__)
 
 # Feature columns the model expects, in the order the scaler was fit on.
-# Kept in sync with src/features/build_features.py and the feature_schema.json
-# artifact logged with each training run.
+# Kept in sync with src/features/build_features.py.
 FEATURE_COLS: list[str] = [
     "avg_order_value",
     "avg_items_per_order",
@@ -44,35 +46,32 @@ SEGMENT_NAMES: dict[int, str] = {
 
 
 class ModelLoadError(RuntimeError):
-    """Raised when the MLflow model cannot be loaded at startup."""
+    """Raised when the segmentation model cannot be loaded at startup."""
 
 
-def _model_uri() -> str:
-    """Return the model URI from ``MODEL_URI`` or the default staging model."""
-    return os.environ.get("MODEL_URI", "models:/online-retail-segmentation/staging")
+def _model_path() -> Path:
+    """Return the model path from ``MODEL_PATH`` or the default location."""
+    return Path(os.environ.get("MODEL_PATH", "artifacts/segmentation_model.pkl"))
 
 
-def load_model() -> mlflow.pyfunc.PyFuncModel:
-    """Load the MLflow model, failing fast with a clear error on failure.
+def load_model() -> SegmentationModel:
+    """Load the segmentation model, failing fast with a clear error on failure.
 
     Raises:
-        ModelLoadError: If ``MLFLOW_TRACKING_URI`` is unset or the model
-            cannot be loaded.
+        ModelLoadError: If the model file is missing or cannot be loaded.
     """
-    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI")
-    if not tracking_uri:
-        raise ModelLoadError(
-            "MLFLOW_TRACKING_URI is not set. Set it to your MLflow tracking "
-            "server before starting the app."
-        )
-    mlflow.set_tracking_uri(tracking_uri)
-
-    uri = _model_uri()
-    logger.info("Loading model from %s", uri)
+    path = _model_path()
+    logger.info("Loading model from %s", path)
     try:
-        return mlflow.pyfunc.load_model(uri)
+        with path.open("rb") as fh:
+            return pickle.load(fh)
+    except FileNotFoundError as exc:
+        raise ModelLoadError(
+            f"Model file not found at {path}. Train it first with "
+            "`uv run python scripts/run_clustering.py --save-model`."
+        ) from exc
     except Exception as exc:
-        raise ModelLoadError(f"Failed to load model from {uri}: {exc}") from exc
+        raise ModelLoadError(f"Failed to load model from {path}: {exc}") from exc
 
 
 def predict(features: dict[str, float]) -> dict:
@@ -100,10 +99,10 @@ def predict(features: dict[str, float]) -> dict:
     }
 
 
-_model: mlflow.pyfunc.PyFuncModel | None = None
+_model: SegmentationModel | None = None
 
 
-def get_model() -> mlflow.pyfunc.PyFuncModel:
+def get_model() -> SegmentationModel:
     """Return the lazily-loaded model, loading it on first call."""
     global _model
     if _model is None:
