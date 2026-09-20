@@ -1,16 +1,12 @@
 #Environment
 .venv
 
-#Product
-mlartifacts
+#Generated artifacts
+artifacts/
 
 #Data
 data/raw
 data/processed
-
-#MLFlow
-mlflow.db
-mlflow-server.log
 
 #Python
 __pycache__/
