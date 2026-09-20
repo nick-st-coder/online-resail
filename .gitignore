@@ -10,6 +10,7 @@ data/processed
 
 #MLFlow
 mlflow.db
+mlflow-server.log
 
 #Python
 __pycache__/
