@@ -60,7 +60,7 @@ def _load_model_on_startup() -> None:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    """Return 200 once the model is loaded; used by the Dockerfile HEALTHCHECK."""
+    """Return 200 once the model is loaded; used by the deployment health check."""
     get_model()
     return {"status": "ok"}
 
